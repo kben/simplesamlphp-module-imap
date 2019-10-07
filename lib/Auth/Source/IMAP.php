@@ -31,6 +31,11 @@ class IMAP extends \SimpleSAML\Module\core\Auth\UserPassBase
     private $domain;
 
     /**
+     * admin users
+     */
+    private $admin;
+
+    /**
      * Constructor for this authentication source.
      *
      * @param array $info  Information about this authentication source.
@@ -45,13 +50,13 @@ class IMAP extends \SimpleSAML\Module\core\Auth\UserPassBase
         parent::__construct($info, $config);
 
         // Make sure that all required parameters are present.
-        foreach (['server', 'port', 'domain'] as $param) {
+        foreach (['server', 'port', 'domain', 'admin'] as $param) {
             if (!array_key_exists($param, $config)) {
                 throw new \Exception('Missing required attribute \''.$param.
                     '\' for authentication source '.$this->authId);
             }
 
-            if (!is_string($config[$param])) {
+            if (!is_string($config[$param]) && !is_array($config[$param])) {
                 throw new \Exception('Expected parameter \''.$param.
                     '\' for authentication source '.$this->authId.
                     ' to be a string. Instead it was: '.
@@ -62,6 +67,7 @@ class IMAP extends \SimpleSAML\Module\core\Auth\UserPassBase
         $this->server = $config['server'];
         $this->port = $config['port'];
         $this->domain = $config['domain'];
+        $this->admin = $config['admin'];
     }
 
 
@@ -86,6 +92,8 @@ class IMAP extends \SimpleSAML\Module\core\Auth\UserPassBase
         if (!(strpos($username, '@') !== false) && (strpos($username, '%40') !== false)) {
                 $username = str_replace("%40","@",$username);
         }
+
+	$username = strtolower($username)
 
         $rcube = new imap_rcube();
         $params = ["port"=>$this->port, "timeout"=>10];
@@ -124,6 +132,7 @@ class IMAP extends \SimpleSAML\Module\core\Auth\UserPassBase
 	if ($number_nam > 1) $attributes['lastname'][] = $nam[1];
 	$attributes['domain'][] = $arr[1];
 	$attributes['email'][] = $username;
+	$attributes['admin'][] = in_array($username, $this->admin);
 
         \SimpleSAML\Logger::info('imapauth:'.$this->authId.': Attributes: '.
             implode(',', array_keys($attributes)));

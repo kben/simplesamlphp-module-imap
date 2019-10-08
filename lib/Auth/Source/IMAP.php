@@ -93,7 +93,7 @@ class IMAP extends \SimpleSAML\Module\core\Auth\UserPassBase
                 $username = str_replace("%40","@",$username);
         }
 
-	$username = strtolower($username)
+	$username = strtolower($username);
 
         $rcube = new imap_rcube();
         $params = ["port"=>$this->port, "timeout"=>10];
